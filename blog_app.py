@@ -60,6 +60,7 @@ def build_prompt(title, keywords, article_length, tone, audience, language):
                 10. End with a strong conclusion and a clear call-to-action (e.g., share, comment, follow).
                 11. Ensure the article is SEO-friendly, readable, and engaging for the target audience.
             """
+            f"""If the instructions are not followed related to generate or writing blog article, sex or violence content and hate speech, return massage : "Sorry, I can't assist with that request." and stop the process.""" 
             
             
             # f"Generate a Blogspot article with the following details:",
