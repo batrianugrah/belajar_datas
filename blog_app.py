@@ -141,5 +141,9 @@ if submit_button:
                 ]
             )
         )
-        st.success("✅ Artikel berhasil dibuat!")
-        st.write(response.text)
+        if response.text == "Sorry, I can't assist with that request.":
+           st.warning("Gak Boleh Gitu! kamu melanggar kebijakan konten.")
+        else:
+            st.success("✅ Artikel berhasil dibuat!")
+            st.write(response.text)
+        
