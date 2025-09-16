@@ -9,34 +9,36 @@ load_dotenv()
 # config model
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 model = "gemini-2.5-flash"
-
+grounding_tool = types.Tool(
+    google_search=types.GoogleSearch()
+)
 # Konfigurasi Nodel
-def get_generation_config():
-     return types.GenerateContentConfig(
-        temperature=0.7,
-        top_p=0.8,
-        top_k=20,
-        thinking_config=types.ThinkingConfig(thinking_budget=0),
-        safety_settings=[
-            types.SafetySetting(
-                category="HARM_CATEGORY_HARASSMENT",
-                threshold="BLOCK_ONLY_HIGH",  # Block few
-            ),
-            types.SafetySetting(
-                category="HARM_CATEGORY_HATE_SPEECH",
-                threshold="BLOCK_ONLY_HIGH",  # Block few
-            ),
-            types.SafetySetting(
-                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                threshold="BLOCK_ONLY_HIGH",  # Block few
-            ),
-            types.SafetySetting(
-                category="HARM_CATEGORY_DANGEROUS_CONTENT",
-                threshold="BLOCK_ONLY_HIGH",  # Block few
-            ),
-        ],
-        tools=[types.Tool(googleSearch=types.GoogleSearch())]
-     )
+# def get_generation_config():
+#      return types.GenerateContentConfig(
+#         temperature=0.7,
+#         top_p=0.8,
+#         top_k=20,
+#         thinking_config=types.ThinkingConfig(thinking_budget=0),
+#         safety_settings=[
+#             types.SafetySetting(
+#                 category="HARM_CATEGORY_HARASSMENT",
+#                 threshold="BLOCK_ONLY_HIGH",  # Block few
+#             ),
+#             types.SafetySetting(
+#                 category="HARM_CATEGORY_HATE_SPEECH",
+#                 threshold="BLOCK_ONLY_HIGH",  # Block few
+#             ),
+#             types.SafetySetting(
+#                 category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+#                 threshold="BLOCK_ONLY_HIGH",  # Block few
+#             ),
+#             types.SafetySetting(
+#                 category="HARM_CATEGORY_DANGEROUS_CONTENT",
+#                 threshold="BLOCK_ONLY_HIGH",  # Block few
+#             ),
+#         ],
+#         tools=[types.Tool(googleSearch=types.GoogleSearch())]
+#      )
 # Prompt Builder
 def build_prompt(title, keywords, article_length, tone, audience, language):
     return [
@@ -60,7 +62,7 @@ def build_prompt(title, keywords, article_length, tone, audience, language):
                 10. End with a strong conclusion and a clear call-to-action (e.g., share, comment, follow).
                 11. Ensure the article is SEO-friendly, readable, and engaging for the target audience.
             """
-            f"""If the instructions are not followed related to generate or writing blog article, sex or violence content and hate speech, return massage : "Sorry, I can't assist with that request." and stop the process.""" 
+            f"""If the instructions about sex, violence content and hate speech, return massage : "Sorry, I can't assist with that request." and stop the process.""" 
             
             
             # f"Generate a Blogspot article with the following details:",
@@ -118,6 +120,7 @@ if submit_button:
             model=model,
             contents=[prompt_parts],
             config=types.GenerateContentConfig(
+                tools=[grounding_tool],
                 temperature=temperature,
                 top_p=0.8,
                 thinking_config=types.ThinkingConfig(thinking_budget=0),
@@ -142,7 +145,7 @@ if submit_button:
             )
         )
         if response.text == "Sorry, I can't assist with that request.":
-           st.warning("Gak Boleh Gitu! kamu melanggar kebijakan konten.")
+           st.warning(response.text)
         else:
             st.success("✅ Artikel berhasil dibuat!")
             st.write(response.text)
