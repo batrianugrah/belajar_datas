@@ -40,7 +40,7 @@ def get_generation_config():
 # Prompt Builder
 def build_prompt(title, keywords, article_length, tone, audience, language):
     return [
-            f"You are an expert SEO copywriter. Generate a Blogspot article with the following details:",
+            f"Generate a Blogspot article with the following details:",
             f"Title: {title}",
             f"Keywords: {keywords}",
             f"Article Length: {article_length} words",
@@ -100,6 +100,9 @@ with st.sidebar:
 
     # Jumlah Gambar
     num_images = st.number_input("Jumlah Gambar (1-3)", min_value=1, max_value=3, value=2)
+    # temperature
+    temperature = st.slider("Kreatifitas (semakin tinggi semakin ngaco)", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+    # tombol submit
     submit_button = st.button("Buat Artikel Blog")
 
 # Generate Button
@@ -113,7 +116,29 @@ if submit_button:
         response = client.models.generate_content(
             model=model,
             contents=[prompt_parts],
-            #generation_config=get_generation_config()
+            config=types.GenerateContentConfig(
+                temperature=temperature,
+                top_p=0.8,
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                safety_settings=[
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HARASSMENT",
+                        threshold="BLOCK_ONLY_HIGH",  # Block few
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HATE_SPEECH",
+                        threshold="BLOCK_ONLY_HIGH",  # Block few
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold="BLOCK_ONLY_HIGH",  # Block few
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold="BLOCK_ONLY_HIGH",  # Block few
+                    ),
+                ]
+            )
         )
         st.success("✅ Artikel berhasil dibuat!")
         st.write(response.text)
