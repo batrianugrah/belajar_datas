@@ -3,6 +3,8 @@ import base64
 import os
 from google import genai
 from google.genai import types
+from PIL import Image
+from io import BytesIO
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,33 +14,7 @@ model = "gemini-2.5-flash"
 grounding_tool = types.Tool(
     google_search=types.GoogleSearch()
 )
-# Konfigurasi Nodel
-# def get_generation_config():
-#      return types.GenerateContentConfig(
-#         temperature=0.7,
-#         top_p=0.8,
-#         top_k=20,
-#         thinking_config=types.ThinkingConfig(thinking_budget=0),
-#         safety_settings=[
-#             types.SafetySetting(
-#                 category="HARM_CATEGORY_HARASSMENT",
-#                 threshold="BLOCK_ONLY_HIGH",  # Block few
-#             ),
-#             types.SafetySetting(
-#                 category="HARM_CATEGORY_HATE_SPEECH",
-#                 threshold="BLOCK_ONLY_HIGH",  # Block few
-#             ),
-#             types.SafetySetting(
-#                 category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
-#                 threshold="BLOCK_ONLY_HIGH",  # Block few
-#             ),
-#             types.SafetySetting(
-#                 category="HARM_CATEGORY_DANGEROUS_CONTENT",
-#                 threshold="BLOCK_ONLY_HIGH",  # Block few
-#             ),
-#         ],
-#         tools=[types.Tool(googleSearch=types.GoogleSearch())]
-#      )
+
 # Prompt Builder
 def build_prompt(title, keywords, article_length, tone, audience, language):
     return [
@@ -63,20 +39,6 @@ def build_prompt(title, keywords, article_length, tone, audience, language):
                 11. Ensure the article is SEO-friendly, readable, and engaging for the target audience.
             """
             f"""If the instructions about sex, violence content and hate speech, return massage : "Sorry, I can't assist with that request." and stop the process.""" 
-            
-            
-            # f"Generate a Blogspot article with the following details:",
-            # f"Write a {article_length}-word blog post in {language} about '{title}'.",
-            # f"Use a {tone.lower()} tone suitable for a {audience.lower()} audience.",
-            # f"Include the following keywords: {keywords}.",
-            
-            # """Important Instructions:
-            # - Start with a strong and engaging introduction (hook).  
-            # - Use clear headings and subheadings (H2, H3) for readability.  
-            # - Naturally incorporate the keywords throughout the article without keyword stuffing.  
-            # - Ensure the writing style is engaging, informative, and SEO-friendly.  
-            # - Keep paragraphs short (2 up to 4 sentences) for better readability.  
-            # - Conclude with a call-to-action or thought-provoking closing statement."""
     ]
 
 ##########################Front End Streamlit##########################
@@ -102,7 +64,7 @@ with st.sidebar:
     language = st.selectbox("Pilih Bahasa", options=["Indonesian", "English", "Spanish", "French"], index=0)
 
     # Jumlah Gambar
-    num_images = st.number_input("Jumlah Gambar (1-3)", min_value=1, max_value=3, value=2)
+    num_images = st.number_input("Jumlah Gambar)", min_value=0, max_value=3, value=0)
     # temperature
     temperature = st.slider("Kreatifitas (semakin tinggi semakin ngaco)", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
     # tombol submit
@@ -144,9 +106,24 @@ if submit_button:
                 ]
             )
         )
+        
         if response.text == "Sorry, I can't assist with that request.":
            st.warning(response.text)
         else:
             st.success("✅ Artikel berhasil dibuat!")
             st.write(response.text)
-        
+        img_response = client.models.generate_content(
+            # model="gemini-2.5-flash-image-preview",
+            model="gemini-2.0-flash-preview-image-generation",
+            contents=f"generate one relevant images about {title} with keyword-rich alt text for better SEO",
+            config=types.GenerateContentConfig(
+            response_modalities=['TEXT', 'IMAGE']
+            )
+        )
+        for part in img_response.candidates[0].content.parts:
+            if part.text is not None:
+                print(part.text)
+            elif part.inline_data is not None:
+                image = Image.open(BytesIO((part.inline_data.data)))
+                # image.save('gemini-native-image.png')
+                st.image(image)
