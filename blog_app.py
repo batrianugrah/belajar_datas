@@ -115,7 +115,7 @@ if submit_button:
         img_response = client.models.generate_content(
             # model="gemini-2.5-flash-image-preview",
             model="gemini-2.0-flash-preview-image-generation",
-            contents=f"generate one relevant images about {title} with keyword-rich alt text for better SEO",
+            contents=f"generate one relevant images about {title} based on suggested image prompt from {response.text}",
             config=types.GenerateContentConfig(
             response_modalities=['TEXT', 'IMAGE']
             )
