@@ -1,19 +1,23 @@
 import streamlit as st
 import base64
 import os
+import re
 from google import genai
 from google.genai import types
 from PIL import Image
+from docx import Document
 from io import BytesIO
 from dotenv import load_dotenv
 
 load_dotenv()
+
 # config model
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 model = "gemini-2.5-flash"
 grounding_tool = types.Tool(
     google_search=types.GoogleSearch()
 )
+
 
 # Prompt Builder
 def build_prompt(title, keywords, article_length, tone, audience, language):
@@ -38,20 +42,23 @@ def build_prompt(title, keywords, article_length, tone, audience, language):
                 10. End with a strong conclusion and a clear call-to-action (e.g., share, comment, follow).
                 11. Ensure the article is SEO-friendly, readable, and engaging for the target audience.
             """
-            f"""If the instructions about sex, violence content and hate speech, return massage : "Sorry, I can't assist with that request." and stop the process.""" 
+            f"""If the instructions about sex, violence content and hate speech and not about generate blog article return massage : "Sorry, I can't assist with that request." and stop the process.""" 
     ]
 
 ##########################Front End Streamlit##########################
+
 # set ke wide mode
 st.set_page_config(layout="wide")
 # judul aplikasi
-st.title("💻 Aplikasi Chat Bot Pembuatan Blog Otomatis dengan Gemini-2.5")
+st.title("⚡️ HyperWrite")
 # subheader
-st.subheader("Buat Blog Otomatis dengan Gemini-2.5 tanpa coding dan gratis")
+st.subheader("Buat artikel Otomatis dan gratis- support by Hacktiv8")
+st.caption("untuk kamu yang memiliki jadwal padat dan membutuhkan konten yang cepat, tetapi tetap berkualitas")
 # bagian sidebar
 with st.sidebar:
     st.title("Input detail artikel blog")
     st.subheader("Masukkan detail artikel blog yang ingin dibuat")
+    
     
     # input judul artikel
     title = st.text_input("Judul Artikel")
@@ -77,7 +84,7 @@ if submit_button:
     else:
         prompt_parts = build_prompt(title, keywords, article_length, tone, audience, language)
 
-    with st.spinner("Sedang membuat artikel..."):
+    with st.spinner("🚀 Saya Sedang menulis dan menggambar......."):
         response = client.models.generate_content(
             model=model,
             contents=[prompt_parts],
@@ -110,12 +117,12 @@ if submit_button:
         if response.text == "Sorry, I can't assist with that request.":
            st.warning(response.text)
         else:
-            st.success("✅ Artikel berhasil dibuat!")
+
             st.write(response.text)
         img_response = client.models.generate_content(
             # model="gemini-2.5-flash-image-preview",
             model="gemini-2.0-flash-preview-image-generation",
-            contents=f"generate one relevant images about {title} based on suggested image prompt from {response.text}",
+            contents=f"generate two relevant images about {title} based on suggested image prompt from {response.text}",
             config=types.GenerateContentConfig(
             response_modalities=['TEXT', 'IMAGE']
             )
@@ -125,5 +132,4 @@ if submit_button:
                 print(part.text)
             elif part.inline_data is not None:
                 image = Image.open(BytesIO((part.inline_data.data)))
-                # image.save('gemini-native-image.png')
                 st.image(image)
