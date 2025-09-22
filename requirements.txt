@@ -1,7 +1,2 @@
 streamlit
-matplotlib
 google-genai
-PIL
-docx
-dotenv
-base64
