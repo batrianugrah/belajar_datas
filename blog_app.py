@@ -5,7 +5,7 @@ import re
 from google import genai
 from google.genai import types
 from PIL import Image
-from docx import Document
+# from docx import Document
 from io import BytesIO
 from dotenv import load_dotenv
 
